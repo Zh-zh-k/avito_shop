@@ -137,6 +137,9 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     "LOGIN_FIELD": "username",
-    "SERIALIZERS": {},
-    "TOKEN_MODEL": None,
+    "SERIALIZERS": {
+        "user_create": "djoser.serializers.UserCreateSerializer",
+        "user": "djoser.serializers.UserSerializer",
+        "current_user": "djoser.serializers.UserSerializer",
+    },
 }
