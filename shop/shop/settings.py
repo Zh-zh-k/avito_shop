@@ -25,7 +25,7 @@ SECRET_KEY = 'wi33-4apz!x060ihqsj*xi@83=2s+qmoa55*uv6m-_3%=_%q4k'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 AVITO_API_URL = "http://localhost:8080"
 
@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
     'rest_framework',
     'rest_framework.authtoken',
     'avito_shop.apps.AvitoShopConfig',
