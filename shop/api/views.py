@@ -3,15 +3,16 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from .permissions import IsAuthenticatedWithToken
 
 
 class UserInfoView(APIView):
     """ Получение баланса, инвентаря и истории транзакций """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedWithToken]
 
     def get(self, request):
-        token = request.auth
-        headers = {"Authorization": f"Bearer {token}"}
+        token = request.headers.get("Authorization")
+        headers = {"Authorization": token}
         response = requests.get(f"{settings.AVITO_API_URL}/api/info",
                                 headers=headers)
 
