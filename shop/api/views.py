@@ -2,6 +2,7 @@ import requests
 from django.conf import settings
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
+from .serializers import SendCoinSerializer
 from .permissions import IsAuthenticatedWithToken
 from rest_framework.decorators import action
 
@@ -31,6 +32,9 @@ class UserViewSet(ViewSet):
     @action(detail=False, methods=["post"])
     def send_coin(self, request):
         """ Передать монеты другому пользователю """
+        serializer = SendCoinSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         response = requests.post(f"{settings.AVITO_API_URL}/api/sendCoin",
                                  headers=self.get_headers(request))
         return Response(response.json(), status=response.status_code)

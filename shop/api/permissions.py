@@ -2,7 +2,7 @@ from rest_framework.permissions import BasePermission
 
 
 class IsAuthenticatedWithToken(BasePermission):
-    """ Проверяет, передан ли JWT-токен в заголовке Authorization. """
+    """ Проверяет, передан ли JWT-токен в заголовке Authorization """
 
     def has_permission(self, request, view):
         # Проверяем наличие заголовка Authorization
