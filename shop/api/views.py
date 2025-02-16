@@ -1,10 +1,12 @@
 import requests
 from django.conf import settings
+from django.contrib.auth.models import User
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
+from rest_framework.decorators import action
+from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import SendCoinSerializer
 from .permissions import IsAuthenticatedWithToken
-from rest_framework.decorators import action
 
 
 class UserViewSet(ViewSet):
@@ -45,3 +47,31 @@ class UserViewSet(ViewSet):
         response = requests.get(f"{settings.AVITO_API_URL}/api/buy/{pk}",
                                 headers=self.get_headers(request))
         return Response(response.json(), status=response.status_code)
+
+    @action(detail=False, methods=["post"], url_path="auth",
+            permission_classes=[])
+    def auth(self, request):
+        """
+        Авторизация пользователя с автоматическим созданием
+        """
+        username = request.data.get("username")
+        password = request.data.get("password")
+
+        if not username or not password:
+            return Response({"error": "Username and password required"},
+                            status=400)
+
+        user, created = User.objects.get_or_create(username=username)
+
+        if created:
+            user.set_password(password)
+            user.save()
+
+        if not user.check_password(password):
+            return Response({"error": "Invalid credentials"}, status=401)
+
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+        })

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+from datetime import timedelta
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -25,7 +26,7 @@ SECRET_KEY = 'wi33-4apz!x060ihqsj*xi@83=2s+qmoa55*uv6m-_3%=_%q4k'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
 
 AVITO_API_URL = "http://localhost:8080"
 
@@ -40,7 +41,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
+    'djoser',
     'rest_framework',
+    'rest_framework_simplejwt',
     'rest_framework.authtoken',
     'avito_shop.apps.AvitoShopConfig',
     'api.apps.ApiConfig',
@@ -125,3 +128,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+DJOSER = {
+    "LOGIN_FIELD": "username",
+    "SERIALIZERS": {},
+    "TOKEN_MODEL": None,
+}
