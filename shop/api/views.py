@@ -1,59 +1,63 @@
 import requests
 from django.conf import settings
 from django.contrib.auth.models import User
-from rest_framework.viewsets import ViewSet
+from django.contrib.auth.hashers import check_password
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import SendCoinSerializer
-from .permissions import IsAuthenticatedWithToken
 
 
-class UserViewSet(ViewSet):
-    """
-    ViewSet для работы с информацией пользователя:
-    - Получение баланса монет, истории транзакций и инвентаря
-    - Передача монет другому пользователю
-    - Покупка товаров
-    """
-    permission_classes = [IsAuthenticatedWithToken]
+class UserInfoView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    def get_headers(self, request):
-        """ Возвращает заголовки с токеном пользователя """
-        return {"Authorization": request.headers.get("Authorization")}
-
-    def list(self, request):
-        """
-        Получить информацию о пользователе (баланс, инвентарь, история
-        транзакций)
-        """
+    def get(self, request):
         response = requests.get(f"{settings.AVITO_API_URL}/api/info",
-                                headers=self.get_headers(request))
+                                headers={"Authorization": request.headers.get("Authorization")})
         return Response(response.json(), status=response.status_code)
 
-    @action(detail=False, methods=["post"])
-    def send_coin(self, request):
-        """ Передать монеты другому пользователю """
+
+class SendCoinView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
         serializer = SendCoinSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         response = requests.post(f"{settings.AVITO_API_URL}/api/sendCoin",
-                                 headers=self.get_headers(request))
+                                 json=request.data,
+                                 headers={"Authorization": request.headers.get("Authorization")})
         return Response(response.json(), status=response.status_code)
 
-    @action(detail=True, methods=["get"])
-    def buy(self, request, pk=None):
-        """ Купить товар по его названию (pk - это название товара) """
-        response = requests.get(f"{settings.AVITO_API_URL}/api/buy/{pk}",
-                                headers=self.get_headers(request))
+
+class BuyItemView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, item):
+        response = requests.get(f"{settings.AVITO_API_URL}/api/info",
+                                headers={"Authorization": request.headers.get("Authorization")})
+        user_data = response.json()
+        coins = user_data.get("coins", 0)
+
+        item_prices = {
+            "t-shirt": 80, "cup": 20, "book": 50, "pen": 10, "powerbank": 200,
+            "hoody": 300, "umbrella": 200, "socks": 10, "wallet": 50, "pink-hoody": 500
+        }
+
+        if item not in item_prices:
+            return Response({"error": "Invalid item"}, status=400)
+
+        if coins < item_prices[item]:
+            return Response({"error": "Not enough coins"}, status=400)
+
+        response = requests.get(f"{settings.AVITO_API_URL}/api/buy/{item}",
+                                headers={"Authorization": request.headers.get("Authorization")})
         return Response(response.json(), status=response.status_code)
 
-    @action(detail=False, methods=["post"], url_path="auth",
-            permission_classes=[])
-    def auth(self, request):
-        """
-        Авторизация пользователя с автоматическим созданием
-        """
+
+class AuthView(APIView):
+    def post(self, request):
         username = request.data.get("username")
         password = request.data.get("password")
 
@@ -67,11 +71,8 @@ class UserViewSet(ViewSet):
             user.set_password(password)
             user.save()
 
-        if not user.check_password(password):
+        if not check_password(password, user.password):
             return Response({"error": "Invalid credentials"}, status=401)
 
         refresh = RefreshToken.for_user(user)
-        return Response({
-            "refresh": str(refresh),
-            "access": str(refresh.access_token),
-        })
+        return Response({"access": str(refresh.access_token)}, status=200)

@@ -1,17 +1,9 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-
-from .views import UserViewSet
-
-app_name = 'api'
-
-router = DefaultRouter()
-router.register(r'api/info', UserViewSet, basename='user_info')
-router.register(r'api/sendCoin', UserViewSet, basename='send_coin')
-router.register(r'api/buy', UserViewSet, basename='buy_item')
+from django.urls import path
+from .views import UserInfoView, SendCoinView, BuyItemView, AuthView
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('api/auth/', include('djoser.urls')),
-    path('api/auth/', include('djoser.urls.jwt'))
+    path("api/info/", UserInfoView.as_view(), name="user_info"),
+    path("api/sendCoin/", SendCoinView.as_view(), name="send_coin"),
+    path("api/buy/<str:item>/", BuyItemView.as_view(), name="buy_item"),
+    path("api/auth/", AuthView.as_view(), name="auth"),
 ]
